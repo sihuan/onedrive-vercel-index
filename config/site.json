@@ -1,20 +1,19 @@
 {
   "icon": "/icons/128.png",
-  "title": "Spencer's OneDrive Index",
-  "maxItems": 100,
+  "title": "SiHuan's AliDrive Index",
+  "maxItems": 50,
   "googleFont": "Rubik",
   "googleFontWeights": [
     "400",
     "600"
   ],
-  "footer": "Powered by <a class=\"hover:underline\" href=\"https://github.com/spencerwooo/onedrive-vercel-index\" target=\"_blank\" rel=\"noopener noreferrer\">onedrive-vercel-index</a>. Made with ❤ by SpencerWoo.",
+  "footer": "Powered by <a class=\"hover:underline\" href=\"https://github.com/sihuan/onedrive-vercel-index\" target=\"_blank\" rel=\"noopener noreferrer\">alidrive-vercel-index</a>. Made with ❤ by SiHuan.",
   "protectedRoutes": [
-    "/🌞 Private folder/u-need-a-password",
-    "/🥟 Some test files/Protected route"
+    "/🥟 Some test files/🌞 Private folder"
   ],
   "contact": {
-    "email": "mailto:spencer.wushangbo@gmail.com",
-    "telegram": "https://t.me/realSpencerWoo",
-    "github": "https://github.com/spencerwooo/onedrive-vercel-index"
+    "email": "mailto:sihuan@sakuya.love",
+    "telegram": "https://t.me/Si_Huan",
+    "github": "https://github.com/sihuan/onedrive-vercel-index"
   }
 }

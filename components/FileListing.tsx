@@ -62,7 +62,7 @@ const queryToPath = (query?: ParsedUrlQuery) => {
 }
 
 const FileListItem: FunctionComponent<{
-  fileContent: { id: string; name: string; size: number; file: Object; lastModifiedDateTime: string }
+  fileContent: { file_id: string; name: string; size: number; type: string; updated_at: string }
 }> = ({ fileContent: c }) => {
   const emojiIcon = emojiRegex().exec(c.name)
   const renderEmoji = emojiIcon && !emojiIcon.index
@@ -75,7 +75,7 @@ const FileListItem: FunctionComponent<{
           {renderEmoji ? (
             <span>{emojiIcon ? emojiIcon[0] : '📁'}</span>
           ) : (
-            <FontAwesomeIcon icon={c.file ? getFileIcon(c.name) : ['far', 'folder']} />
+            <FontAwesomeIcon icon={c.type == 'file' ? getFileIcon(c.name) : ['far', 'folder']} />
           )}
         </div>
         <div className="truncate">
@@ -83,7 +83,7 @@ const FileListItem: FunctionComponent<{
         </div>
       </div>
       <div className="md:block dark:text-gray-500 flex-shrink-0 hidden col-span-3 font-mono text-sm text-gray-700">
-        {new Date(c.lastModifiedDateTime).toLocaleString('en-US', {
+        {new Date(c.updated_at).toLocaleString('en-US', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -93,7 +93,7 @@ const FileListItem: FunctionComponent<{
         })}
       </div>
       <div className="md:block dark:text-gray-500 flex-shrink-0 hidden col-span-1 font-mono text-sm text-gray-700 truncate">
-        {humanFileSize(c.size)}
+        {c.type == 'file' ? humanFileSize(c.size) : ''}
       </div>
     </div>
   )
@@ -154,16 +154,16 @@ const FileListing: FunctionComponent<{ query?: ParsedUrlQuery }> = ({ query }) =
     let readmeFile = null
 
     // Expand list of API returns into flattened file data
-    const children = [].concat(...responses.map(r => r.folder.value))
+    const children = [].concat(...responses.map(r => r.folder.items))
 
     children.forEach((c: any) => {
       if (fileIsImage(c.name)) {
         imagesInFolder.push({
-          src: c['@microsoft.graph.downloadUrl'],
+          src: c['url'],
           alt: c.name,
-          downloadUrl: c['@microsoft.graph.downloadUrl'],
+          downloadUrl: c['url'],
         })
-        imageIndexDict[c.id] = imageIndex
+        imageIndexDict[c.file_id] = imageIndex
         imageIndex += 1
       }
 
@@ -229,14 +229,14 @@ const FileListing: FunctionComponent<{ query?: ParsedUrlQuery }> = ({ query }) =
         )}
 
         {children.map((c: any) => (
-          <div className="hover:bg-gray-100 dark:hover:bg-gray-850 grid grid-cols-12" key={c.id}>
+          <div className="hover:bg-gray-100 dark:hover:bg-gray-850 grid grid-cols-12" key={c.file_id}>
             <div
               className="col-span-11"
               onClick={e => {
                 e.preventDefault()
 
-                if (!c.folder && fileIsImage(c.name)) {
-                  setActiveImageIdx(imageIndexDict[c.id])
+                if (c.type == 'file' && fileIsImage(c.name)) {
+                  setActiveImageIdx(imageIndexDict[c.file_id])
                   setImageViewerVisibility(true)
                 } else {
                   router.push(`${path === '/' ? '' : path}/${encodeURIComponent(c.name)}`)
@@ -245,7 +245,7 @@ const FileListing: FunctionComponent<{ query?: ParsedUrlQuery }> = ({ query }) =
             >
               <FileListItem fileContent={c} />
             </div>
-            {c.folder ? (
+            {c.type == 'folder' ? (
               <div className="md:flex dark:text-gray-400 hidden p-1 text-gray-700">
                 <span
                   title="Copy folder permalink"
@@ -273,7 +273,7 @@ const FileListing: FunctionComponent<{ query?: ParsedUrlQuery }> = ({ query }) =
                 <a
                   title="Download file"
                   className="hover:bg-gray-300 dark:hover:bg-gray-600 p-2 rounded cursor-pointer"
-                  href={c['@microsoft.graph.downloadUrl']}
+                  href={c['download_url']}
                 >
                   <FontAwesomeIcon icon={['far', 'arrow-alt-circle-down']} />
                 </a>
@@ -341,7 +341,7 @@ const FileListing: FunctionComponent<{ query?: ParsedUrlQuery }> = ({ query }) =
 
   if ('file' in responses[0] && responses.length === 1) {
     const { file } = responses[0]
-    const downloadUrl = file['@microsoft.graph.downloadUrl']
+    const downloadUrl = file['download_url']
     const fileName = file.name
     const fileExtension = fileName.slice(((fileName.lastIndexOf('.') - 1) >>> 0) + 2).toLowerCase()
 

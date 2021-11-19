@@ -5,41 +5,38 @@ import { posix as pathPosix } from 'path'
 import apiConfig from '../../config/api.json'
 import siteConfig from '../../config/site.json'
 import { compareHashedToken } from '../../utils/tools'
+import redis from '../../utils/redis'
 
 const basePath = pathPosix.resolve('/', apiConfig.base)
-const encodePath = (path: string) => {
-  let encodedPath = pathPosix.join(basePath, pathPosix.resolve('/', path))
-  if (encodedPath === '/' || encodedPath === '') {
+
+const wrapPath = (path: string) => {
+  let wrappedPath = pathPosix.join(basePath, pathPosix.resolve('/', path))
+  if (wrappedPath === '/' || wrappedPath === '') {
     return ''
   }
-  encodedPath = encodedPath.replace(/\/$/, '')
-  return `:${encodeURIComponent(encodedPath)}`
+  return wrappedPath.replace(/\/$/, '')
 }
 
 // Store access token in memory, cuz Vercel doesn't provide key-value storage natively
-let _access_token = ''
-const getAccessToken = async () => {
-  if (_access_token) {
-    console.log('Fetch token from memory.')
-    return _access_token
+const getAccessToken = async() =>{
+  const access_token = await redis.get('access_token')
+  if(access_token){
+      return access_token
   }
-
-  const body = new URLSearchParams()
-  body.append('client_id', apiConfig.clientId)
-  body.append('redirect_uri', apiConfig.redirectUri)
-  body.append('client_secret', process.env.CLIENT_SECRET ? process.env.CLIENT_SECRET : '')
-  body.append('refresh_token', process.env.REFRESH_TOKEN ? process.env.REFRESH_TOKEN : '')
-  body.append('grant_type', 'refresh_token')
-
-  const resp = await axios.post(apiConfig.authApi, body, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+  const refresh_token = await redis.get('refresh_token')
+  const resp = await axios.post(apiConfig.authApi, JSON.stringify({
+      'refresh_token': refresh_token,
+      'grant_type': 'refresh_token'
+  }), {
+      headers: {
+          'Content-Type': 'application/json',
+      },
   })
-
-  if (resp.data.access_token) {
-    _access_token = resp.data.access_token
-    return _access_token
+  if(resp.data.access_token){
+      await redis.set('access_token', resp.data.access_token)
+      await redis.expire('access_token', resp.data.expires_in)
+      await redis.set('refresh_token', resp.data.refresh_token)
+      return resp.data.access_token
   }
 }
 
@@ -66,15 +63,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Fetch password from remote file content
     if (authTokenPath !== '') {
       try {
-        const token = await axios.get(`${apiConfig.driveApi}/root${encodePath(authTokenPath)}`, {
+        const token = await axios.post(`${apiConfig.driveApi}/get_by_path`, JSON.stringify({
+          'drive_id': apiConfig.driveId,
+          'file_path': wrapPath(authTokenPath),
+        }), {
           headers: { Authorization: `Bearer ${accessToken}` },
-          params: {
-            select: '@microsoft.graph.downloadUrl,file',
-          },
         })
 
         // Handle request and check for header 'od-protected-token'
-        const odProtectedToken = await axios.get(token.data['@microsoft.graph.downloadUrl'])
+        const odProtectedToken = await axios.get(token.data['url'])
         // console.log(req.headers['od-protected-token'], odProtectedToken.data.trim())
 
         if (!compareHashedToken(req.headers['od-protected-token'] as string, odProtectedToken.data)) {
@@ -91,64 +88,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    const requestPath = encodePath(path)
-    // Handle response from OneDrive API
-    const requestUrl = `${apiConfig.driveApi}/root${requestPath}`
+    const requestPath = wrapPath(path)
     // Whether path is root, which requires some special treatment
     const isRoot = requestPath === ''
 
     // Go for file raw download link and query with only temporary link parameter
     if (raw) {
-      const { data } = await axios.get(requestUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        params: {
-          select: '@microsoft.graph.downloadUrl,folder,file',
-        },
-      })
-
-      if ('folder' in data) {
+      if (isRoot) {
         res.status(400).json({ error: "Folders doesn't have raw download urls." })
         return
       }
-      if ('file' in data) {
-        res.redirect(data['@microsoft.graph.downloadUrl'])
+      const { data } = await axios.post(`${apiConfig.driveApi}/get_by_path`, JSON.stringify({
+        'drive_id': apiConfig.driveId,
+        'file_path': requestPath
+      }), {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+
+      if (data['type'] == 'folder') {
+        res.status(400).json({ error: "Folders doesn't have raw download urls." })
+        return
+      }
+      if (data['type'] == 'file') {
+        res.redirect(data['download_url'])
         return
       }
     }
 
     // Querying current path identity (file or folder) and follow up query childrens in folder
     // console.log(accessToken)
-
-    const { data: identityData } = await axios.get(requestUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      params: {
-        select: '@microsoft.graph.downloadUrl,name,size,id,lastModifiedDateTime,folder,file',
-      },
-    })
-
-    if ('folder' in identityData) {
-      const { data: folderData } = await axios.get(`${requestUrl}${isRoot ? '': ':'}/children`, {
+    let identityData = {};
+    if (isRoot) {
+      identityData = {
+        'type': 'folder',
+        'file_id': 'root',
+      }
+    } else {
+      ({ data: identityData } = await axios.post(`${apiConfig.driveApi}/get_by_path`, JSON.stringify({
+        'drive_id': apiConfig.driveId,
+        'file_path': requestPath
+      }), {
         headers: { Authorization: `Bearer ${accessToken}` },
-        params: next
-          ? {
-              select: '@microsoft.graph.downloadUrl,name,size,id,lastModifiedDateTime,folder,file',
-              top: siteConfig.maxItems,
-              $skipToken: next,
-            }
-          : {
-              select: '@microsoft.graph.downloadUrl,name,size,id,lastModifiedDateTime,folder,file',
-              top: siteConfig.maxItems,
-            },
+      }))
+    }
+
+    if (identityData['type'] == 'folder') {
+      const { data: folderData } = await axios.post(`${apiConfig.driveApi}/list`, JSON.stringify({
+        'drive_id': apiConfig.driveId,
+        'parent_file_id': identityData['file_id'],
+        'limit': siteConfig.maxItems,
+        'marker': next,
+        'order_by': 'name',
+        'order_direction': 'ASC',
+      }), {
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
 
-      // Extract next page token from full @odata.nextLink
-      const nextPage = folderData['@odata.nextLink']
-        ? folderData['@odata.nextLink'].match(/&\$skiptoken=(.+)/i)[1]
-        : null
-
       // Return paging token if specified
-      if (nextPage) {
-        res.status(200).json({ folder: folderData, next: nextPage })
+      if (folderData['next_marker']) {
+        res.status(200).json({ folder: folderData, next: folderData['next_marker'] })
       } else {
         res.status(200).json({ folder: folderData })
       }
