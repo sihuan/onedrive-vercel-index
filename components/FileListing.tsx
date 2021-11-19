@@ -93,7 +93,7 @@ const FileListItem: FunctionComponent<{
         })}
       </div>
       <div className="md:block dark:text-gray-500 flex-shrink-0 hidden col-span-1 font-mono text-sm text-gray-700 truncate">
-        {c.type == 'file' ? humanFileSize(c.size) : ''}
+        {c.type == 'file' ? humanFileSize(c.size) : '-'}
       </div>
     </div>
   )

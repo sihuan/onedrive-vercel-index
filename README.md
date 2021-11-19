@@ -1,16 +1,14 @@
 <div align="center">
-  <img src="./public/header.png" alt="onedrive-vercel-index" />
-  <h3><a href="https://drive.spencerwoo.com">onedrive-vercel-index</a></h3>
-  <p><em>Yet another-another OneDrive index, powered by Vercel and Next.js</em></p>
-  <img src="https://img.shields.io/badge/OneDrive-2C68C3?style=flat&logo=microsoft-onedrive&logoColor=white" alt="Next.js" />
+  <img src="./public/header.png" alt="alidrive-vercel-index" />
+  <h3><a href="https://alidrive.vercel.app">alidrive-vercel-index</a></h3>
+  <p><em>Yet another-another AliDrive index, powered by Vercel and Next.js</em></p>
   <img src="https://img.shields.io/badge/Next.js-black?style=flat&logo=next.js&logoColor=white" alt="Next.js" />
   <img src="https://img.shields.io/badge/Vercel-black?style=flat&logo=Vercel&logoColor=white" alt="Vercel" />
-  <a href="https://github.com/spencerwooo/onedrive-vercel-index/discussions"><img src="https://img.shields.io/github/discussions/spencerwooo/onedrive-vercel-index?color=CF2B5B&labelColor=black&logo=github" alt="GitHub Discussions" /></a>
 </div>
 
 ---
 
-<h5>This is <a href="https://github.com/spencerwooo/onedrive-cf-index">onedrive-cf-index</a>'s little brother, basically the same, but powered by Next.js and Vercel.</h5>
+<h5>This is <a href="https://github.com/spencerwooo/onedrive-vercel-index">onedrive-vercel-index</a>'s little brother, basically the same, but for alidrive.</h5>
 
 ## Features
 
@@ -26,13 +24,9 @@
 - [x] Protected routes (password protection and authentication) through `.password` files
 - [x] Pagination for folders with more than 200 items
 
-## Discussion
-
-Please go to our [discussion forum](https://github.com/spencerwooo/onedrive-vercel-index/discussions) for general questions, **issues are for bug reports and bug reports only.**
-
 ## Demo
 
-Available at: <https://drive.spencerwoo.com>.
+Available at: <https://alidrive.vercel.app>.
 
 ![demo](./public/demo.png)
 
@@ -40,13 +34,13 @@ Available at: <https://drive.spencerwoo.com>.
 
 > Simplified version for now, will update for detailed documentations in due course.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https%3A%2F%2Fgithub.com%2Fspencerwooo%2Fonedrive-vercel-index&env=REFRESH_TOKEN,ACCESS_TOKEN,CLIENT_SECRET&envDescription=Required%20API%20tokens%20for%20this%20project.&project-name=onedrive-vercel-index&repo-name=onedrive-vercel-index&demo-title=onedrive-vercel-index&demo-description=Probably%20the%20best%20looking%20OneDrive%20Index%20around!%20Powered%20by%20Vercel%20and%20Next.js.&demo-url=http%3A%2F%2Fonedrive-vercel-index.vercel.app&demo-image=https%3A%2F%2Fraw.githubusercontent.com%2Fspencerwooo%2Fonedrive-vercel-index%2Fmain%2Fpublic%2Fdemo.png)
-
-- Use the button above to deploy the project to Vercel. Vercel will automatically fork and clone the project to your GitHub account.
-- Define environment variables inside Vercel: `REFRESH_TOKEN`, `ACCESS_TOKEN`, `CLIENT_SECRET`.
+- Fork and clone the project to your GitHub account. Then deploy the project to Vercel.
+- Define environment variables inside Vercel: `REDIS_URL`.
 - Finally, change configuration file [`config/api.json`](config/api.json) and [`config/site.json`](config/site.json) according to your configs.
 
-The authentication tokens and variables are the same as what you configured in the [`onedrive-cf-index`](https://github.com/spencerwooo/onedrive-cf-index) project. Detailed documentations can also be found there (for now). This project is at its early stages, for discussions *please, please, please* post to the [discussion forum](https://github.com/spencerwooo/onedrive-vercel-index/discussions).
+可以使用 [Upstash](https://vercel.com/integrations/upstash) 提供的免费的 redis 数据库，
+新建 redis 数据库后，填写上文提到 Vercel 的 `REDIS_URL` 环境变量。
+你需要用某种方式向你新建的 redis 数据库中新建键名为 `refresh_token` 的键值对，其值可以参考[这里](https://github.com/Xhofe/alist/issues/88)获得。
 
 ## Protected routes
 
