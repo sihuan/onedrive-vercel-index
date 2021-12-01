@@ -1,6 +1,6 @@
 {
   "driveId": "626141",
-  "base": "/Public",
+  "base": "/Public/MMA",
   "authApi": "https://auth.aliyundrive.com/v2/account/token",
   "driveApi": "https://api.aliyundrive.com/v2/file"
 }

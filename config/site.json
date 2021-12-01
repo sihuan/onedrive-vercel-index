@@ -1,6 +1,6 @@
 {
   "icon": "/icons/128.png",
-  "title": "SiHuan's AliDrive Index",
+  "title": "Mathematica Mirror",
   "maxItems": 50,
   "googleFont": "Rubik",
   "googleFontWeights": [
@@ -9,7 +9,6 @@
   ],
   "footer": "Powered by <a class=\"hover:underline\" href=\"https://github.com/sihuan/onedrive-vercel-index\" target=\"_blank\" rel=\"noopener noreferrer\">alidrive-vercel-index</a>. Made with ❤ by SiHuan.",
   "protectedRoutes": [
-    "/🥟 Some test files/🌞 Private folder"
   ],
   "contact": {
     "email": "mailto:sihuan@sakuya.love",
