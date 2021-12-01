@@ -6,7 +6,7 @@ jobs:
   cron:
     runs-on: ubuntu-latest
     steps:
-      - name: Visit the home page
+      - name: Visit the home page api
         run: |
           curl --request GET \
-          --url 'https://alidrive.vercel.app'
+          --url 'https://alidrive.vercel.app/api?path=/'
