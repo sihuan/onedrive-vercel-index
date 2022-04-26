@@ -10,7 +10,8 @@
   "footer": "Powered by <a class=\"hover:underline\" href=\"https://github.com/sihuan/onedrive-vercel-index\" target=\"_blank\" rel=\"noopener noreferrer\">alidrive-vercel-index</a>. Made with ❤ by SiHuan.",
   "protectedRoutes": [
     "/Private",
-    "/🥟 Some test files/🌞 Private folder"
+    "/🥟 Some test files/🌞 Private folder",
+    "/Rec"
   ],
   "contact": {
     "email": "mailto:sihuan@sakuya.love",
